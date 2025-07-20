@@ -6,7 +6,8 @@
         "server:build": "tsc",
         "server:build:watch": "tsc --watch",
         "server:dev": "tsx src/server.ts",
-        "server:dev:inspect": "set DANGEROUSLY_OMIT_AUTH=true && npx @modelcontextprotocol/inspector npm run server:dev"
+        "server:dev:inspect": "set DANGEROUSLY_OMIT_AUTH=true && npx @modelcontextprotocol/inspector npm run server:dev",
+        "client:dev": "tsx src/client.ts"
     },
     "keywords": [],
     "author": "",
@@ -19,7 +20,9 @@
         "typescript": "^5.8.3"
     },
     "dependencies": {
+        "@inquirer/prompts": "^7.6.0",
         "@modelcontextprotocol/sdk": "^1.13.0",
+        "dotenv": "^17.2.0",
         "zod": "^3.25.76"
     }
 }
