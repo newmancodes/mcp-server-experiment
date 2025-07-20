@@ -1,7 +1,8 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
 import fs from "node:fs/promises"
+import { mime } from "zod/v4"
 
 const server = new McpServer({
     name: "Test",
@@ -39,6 +40,79 @@ server.tool("create-user", "Create a new user in the database", {
             ]
         }
     }
+})
+
+server.resource(
+    "users",
+    "users://all",
+    {
+        description: "Get all users data from the database",
+        title: "Users",
+        mimeType: "application/json"
+    },
+    async uri => {
+        const users = await import("./data/users.json", { 
+            with: { type: "json" }
+        }).then(m => m.default)
+
+        return {
+            contents: [ {
+                uri: uri.href,
+                text: JSON.stringify(users),
+                mimeType: "application/json"
+            }]
+        }
+    }
+)
+
+server.resource(
+    "user-details",
+    new ResourceTemplate("users://{userId}/profile", {
+        list: undefined
+    }),
+    {
+        description: "Get a users details from the database",
+        title: "User Details",
+        mimeType: "application/json"
+    },
+    async (uri, { userId }) => {
+        const users = await import("./data/users.json", { 
+            with: { type: "json" }
+        }).then(m => m.default)
+        const user = users.find(user => user.id === parseInt(userId as string))
+
+        if (user == null) {
+            return {
+                contents: [ {
+                    uri: uri.href,
+                    text: JSON.stringify({ error: "User not found" }),
+                    mimeType: "application/json"
+                }]
+            }
+        }
+
+        return {
+            contents: [ {
+                uri: uri.href,
+                text: JSON.stringify(user),
+                mimeType: "application/json"
+            }]
+        }
+    }
+)
+
+server.prompt("generate-fake-user", "Generate a fake user based on a given name", {
+    name: z.string()
+}, ({ name }) => {
+    return {
+        messages: [{
+            role: 'user',
+            content: {
+                type: "text",
+                text: `Generate a fake user with the name ${name}. The user should have a realistic email, address, and phone number.`
+            }
+        }]
+    }    
 })
 
 async function createUser(user: { name: string, email: string, address: string, phone: string }): Promise<number> {
