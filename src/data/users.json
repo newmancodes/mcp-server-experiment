@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Sarah Johnson",
+    "email": "sarah.johnson@email.com",
+    "address": "123 Oak Street, Springfield, IL 62701",
+    "phone": "+1-555-0123"
+  },
+  {
+    "id": 2,
+    "name": "Michael Chen",
+    "email": "michael.chen@email.com",
+    "address": "456 Maple Avenue, Portland, OR 97205",
+    "phone": "+1-555-0456"
+  },
+  {
+    "id": 3,
+    "name": "Emily Rodriguez",
+    "email": "emily.rodriguez@email.com",
+    "address": "789 Pine Boulevard, Austin, TX 73301",
+    "phone": "+1-555-0789"
+  }
+]
