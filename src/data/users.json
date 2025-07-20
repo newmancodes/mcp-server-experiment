@@ -61,5 +61,18 @@
     "email": "testbrian@test.com",
     "address": "35432235213",
     "phone": "fdfsdfs"
+  },
+  {
+    "id": 10,
+    "firstName": "Eleanor",
+    "lastName": "Vance",
+    "email": "eleanor.vance78@example.com",
+    "address": {
+      "street": "456 Oak Avenue",
+      "city": "Springfield",
+      "state": "IL",
+      "zipCode": "62704"
+    },
+    "phoneNumber": "217-555-9876"
   }
 ]

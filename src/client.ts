@@ -3,8 +3,8 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { confirm, input, select } from "@inquirer/prompts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { Prompt, PromptMessage, Tool } from "@modelcontextprotocol/sdk/types.js";
-import { generateText } from "ai";
+import { CreateMessageRequestSchema, Prompt, PromptMessage, Tool } from "@modelcontextprotocol/sdk/types.js";
+import { generateText, jsonSchema, ToolSet } from "ai";
 
 const mcp = new Client({
     name: "Test Client",
@@ -34,6 +34,26 @@ async function main() {
         mcp.listResourceTemplates()
     ])
 
+    mcp.setRequestHandler(CreateMessageRequestSchema, async request => {
+        const texts: string[] = []
+        for (const message of request.params.messages) {
+            const text = await handleServerMessagePrompt(message)
+            if (text != null) {
+                texts.push(text)
+            }
+        }
+
+        return {
+            role: 'user',
+            model: 'gemini-2.0-flash',
+            stopReason: "endTurn",
+            content: {
+                type: "text",
+                text: texts.join("\n")
+            }
+        }
+    })
+
     console.log("You are connected!")
     while (true) {
         const option = await select( {
@@ -57,6 +77,10 @@ async function main() {
                 } else {
                     const result = await handlePrompt(prompt);
                 }
+                break
+            }
+            case "Query": {
+                await handleQuery(tools)
                 break
             }
             case "Resources": {
@@ -144,6 +168,33 @@ async function handleServerMessagePrompt(message: PromptMessage): Promise<string
     })
 
     return text
+}
+
+async function handleQuery(tools: Tool[]): Promise<void> {
+    const query = await input({ message: "Enter your query:" });
+
+    const { text, toolResults } = await generateText({
+        model: google("gemini-2.0-flash"),
+        prompt: query,
+        tools: tools.reduce((obj, tool) => ({
+            ...obj,
+            [tool.name]: {
+                description: tool.description,
+                parameters: jsonSchema(tool.inputSchema),
+                execute: async (args: Record<string, any>) => {
+                    return await mcp.callTool({
+                        name: tool.name,
+                        arguments: args
+                    })
+                }
+            }
+        }), {} as ToolSet)
+    })
+
+    console.log(
+        // @ts-expect-error
+        text || toolResults[0]?.result?.content[0].text || "No text generated"
+    )
 }
 
 async function handleResource(uri: string): Promise<void> {
