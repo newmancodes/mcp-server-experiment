@@ -1,8 +1,10 @@
-import { input, select } from "@inquirer/prompts";
+import "dotenv/config";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { confirm, input, select } from "@inquirer/prompts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
-import { describe } from "node:test";
+import { Prompt, PromptMessage, Tool } from "@modelcontextprotocol/sdk/types.js";
+import { generateText } from "ai";
 
 const mcp = new Client({
     name: "Test Client",
@@ -17,6 +19,10 @@ const transport = new StdioClientTransport({
     command: "node",
     args: [ "build/server.js" ],
     stderr: "ignore"
+})
+
+const google = createGoogleGenerativeAI({
+    apiKey: process.env.GEMINI_API_KEY
 })
 
 async function main() {
@@ -36,6 +42,23 @@ async function main() {
         })
 
         switch (option) {
+            case "Prompts": {
+                const promptName = await select({
+                    message: "Select a prompt to use",
+                    choices: prompts.map(prompt => ({
+                        name: prompt.name,
+                        value: prompt.name,
+                        description: prompt.description,
+                    })),
+                })
+                const prompt = prompts.find(p => p.name === promptName);
+                if (prompt == null) {
+                    console.error("Prompt not found");
+                } else {
+                    const result = await handlePrompt(prompt);
+                }
+                break
+            }
             case "Resources": {
                 const resourceUri = await select({
                     message: "Select a resource to view",
@@ -81,6 +104,46 @@ async function main() {
             }
         }
     }
+}
+
+async function handlePrompt(prompt: Prompt): Promise<void> {
+    const args: Record<string, string>  = {}
+    for (const arg of prompt.arguments ?? []) {
+        args[arg.name] = await input({
+            message: `Enter value for ${arg.name}:`,
+        })
+    }
+
+    const response = await mcp.getPrompt({
+        name: prompt.name,
+        arguments: args
+    })
+
+    for (const message of response.messages) {
+        console.log(await handleServerMessagePrompt(message))
+    }
+}
+
+async function handleServerMessagePrompt(message: PromptMessage): Promise<string> {
+    if (message.content.type !== "text")
+        return "Unsupported message type";
+
+    console.log(message.content.text);
+    const run = await confirm({
+        message: "Would you like to run this prompt?",
+        default: true
+    })
+
+    if (!run) {
+        return "Prompt not run";
+    }
+
+    const { text } = await generateText({
+        model: google("gemini-2.0-flash"),
+        prompt: message.content.text,
+    })
+
+    return text
 }
 
 async function handleResource(uri: string): Promise<void> {
