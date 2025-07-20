@@ -8,7 +8,7 @@
 			],
 			"cwd": "${workspaceFolder}",
 			"dev": {
-				"watch": "build/**/*.js",
+				"watch": ["build/**/*.js", "build/**/*.json"],
 				"debug": {
 					"type": "node"
 				}

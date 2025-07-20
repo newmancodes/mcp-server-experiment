@@ -40,5 +40,19 @@
     "email": "jeff.martinez@gmail.com",
     "address": "567 Cedar Lane, Phoenix, AZ 85001",
     "phone": "+1-555-0567"
+  },
+  {
+    "id": 7,
+    "name": "Jessica M. Turner",
+    "email": "jessica.turner82@gmail.com",
+    "address": "1842 Willowbrook Lane, Apt 307, Charlotte, NC 28210",
+    "phone": "(704) 555-1938"
+  },
+  {
+    "id": 8,
+    "name": "Jessica Ramirez",
+    "email": "jessica.ramirez82@gmail.com",
+    "address": "1842 Willowbrook Lane, Austin, TX 78758",
+    "phone": "(512) 555-2374"
   }
 ]
